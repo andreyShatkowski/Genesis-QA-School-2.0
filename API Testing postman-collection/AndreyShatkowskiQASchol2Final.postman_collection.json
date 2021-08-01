@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "7c07e542-fe58-4b30-9c01-689e04cedcca",
+		"name": "AndreyShatkowskiQASchol2Final",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Retrieve a user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//Checking code status \r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"//Testing response times\r",
+							"pm.test(\"Response time < 2000ms\", () => {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"//Validating main fields of response\r",
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"var schema = {\r",
+							"    \"type\": \"object\",\r",
+							"    \"properties\": {\r",
+							"        \"results\": {\r",
+							"            \"type\": \"array\",\r",
+							"            \"items\": {\r",
+							"                        \"type\": \"object\",\r",
+							"                        \"properties\": {\r",
+							"                            \"object\": {\r",
+							"                                \"type\": \"string\"\r",
+							"                            },\r",
+							"                             \"id\": {\r",
+							"                                \"type\": \"string\"\r",
+							"                            },\r",
+							"                             \"name\": {\r",
+							"                                \"type\": \"string\"\r",
+							"                            },\r",
+							"                              \"avatarurl\": {\r",
+							"                                \"type\": \"string\"\r",
+							"                            },\r",
+							"                            \"type\": {\r",
+							"                                \"type\": \"string\"\r",
+							"                            }\r",
+							"                        }, \"required\": [\r",
+							"                               \"object\", \r",
+							"                               \"id\", \r",
+							"                               \"name\", \r",
+							"                               \"avatar_url\",\r",
+							"                               \"type\",\r",
+							"                              \r",
+							"                               ]    \r",
+							"                    }\r",
+							"            \r",
+							"                   }\r",
+							"    \r",
+							"    }\r",
+							"}\r",
+							"pm.test('Schema is valid', function () {\r",
+							"    pm.expect(tv4.validate(jsonData, schema)).to.be.true;\r",
+							"});\r",
+							"\r",
+							"postman.setNextRequest(\"Retrieve a user invalidToken - status401\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Notion-Version",
+						"value": "2021-05-13"
+					}
+				],
+				"url": {
+					"raw": "{{mainURL}}/users/cefe97dd-ec3e-4c81-a68d-152e9087b3ba",
+					"host": [
+						"{{mainURL}}"
+					],
+					"path": [
+						"users",
+						"cefe97dd-ec3e-4c81-a68d-152e9087b3ba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Retrieve a user invalidToken - status401",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//Checking code status. Negative case - the token is not valid   \r",
+							"pm.test(\"Status code is 401\", function () {\r",
+							"    pm.response.to.have.status(401);\r",
+							"});\r",
+							"\r",
+							"//Checking that the status 401 was caused by an invalid token \r",
+							"\r",
+							"pm.test(\"API token is invalid\", function () {\r",
+							"    pm.expect(pm.response.text()).to.include(\"API token is invalid\");\r",
+							"});\r",
+							"\r",
+							"postman.setNextRequest(\"Create a page\");"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//Generating an invalid random token in pre-request to check that the user cannot log in with the wrong token \r",
+							"\r",
+							"pm.environment.set(\"invalidToken\", \"secrer_\" + Math.floor(Math.random() * 100000000) );"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{invalidToken}}"
+					},
+					{
+						"key": "Notion-Version",
+						"value": "2021-05-13"
+					}
+				],
+				"url": {
+					"raw": "{{mainURL}}/users",
+					"host": [
+						"{{mainURL}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a page",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//Checking code status \r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"//Testing response times\r",
+							"pm.test(\"Response time < 2000ms\", () => {\r",
+							"  pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+							"});\r",
+							"\r",
+							"//Writing variables to the environment \r",
+							"let jsonData = JSON.parse(responseBody);\r",
+							"pm.environment.set(\"id\", jsonData.id);\r",
+							"pm.environment.set(\"database_id\", jsonData.parent.database_id);\r",
+							"\r",
+							"//Check that 'id' is correct - environment method\r",
+							"pm.test(\"'id' is correct - environment check\", function () {\r",
+							"    pm.expect(jsonData.id).to.eql(pm.environment.get(\"id\"));\r",
+							"});\r",
+							"\r",
+							"//Check that \"database id\" from response is correct. Comparison of environment variables metod\r",
+							"pm.test(\"'database_id' is correct - environment check\", function () {\r",
+							"    pm.expect(jsonData.parent.database_id).to.eql(pm.environment.get(\"database_id\"));\r",
+							"});\r",
+							"\r",
+							"//Check that \"database id\" from response is correct. Comparison of request body metod\r",
+							"pm.test(\"database_id - request check\", function () {\r",
+							"    let body_request = JSON.parse(pm.request.body.raw);\r",
+							"    let database_id_request = body_request.parent.database_id;\r",
+							"    pm.expect(jsonData.parent.database_id).to.eql(database_id_request);\r",
+							"});\r",
+							"\r",
+							"//Check that the page has been assigned \"id\"\r",
+							"pm.test(\"Page to have id\", function () {\r",
+							"    pm.expect(jsonData).to.have.property('id');\r",
+							"});\r",
+							"\r",
+							"//Check that database contains the page with 'id' from responce \r",
+							"pm.test(\"database_id to have page with id response\", function () {\r",
+							"   pm.expect(jsonData.url).to.include(jsonData.id.replace(/-/g, \"\"));\r",
+							"   console.log(jsonData.url);\r",
+							"   console.log(jsonData.id);\r",
+							"});\r",
+							"\r",
+							"postman.setNextRequest(null);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Notion-Version",
+						"value": "2021-05-13"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"parent\": { \"database_id\": \"{{database_id}}\" },\n\t\"properties\": {\n  \"Name\": {\n    \"title\": [\n      {\n        \"type\": \"string\",\n        \"text\": {\n          \"content\": \"{{$randomCountry}}\"\n        }\n      }\n    ]\n  },\n  \"Population\": {\n\t\t\t\"rich_text\": [\n                {\n        \"type\": \"number\",\n        \"text\": {\n          \"content\": \"{{$randomInt}} {{$randomInt}} {{$randomInt}}\"\n        },\n        \"annotations\": {\n          \"italic\": true\n        }\n      }\n\t\t\t]\n\t\t},      \n\t\t\"Capital\": {\n\t\t\t\"rich_text\": [\n                {\n        \"type\": \"text\",\n        \"text\": {\n          \"content\": \"{{$randomCity}}\"\n        },\n        \"annotations\": {\n          \"bold\": true\n        }\n      }\n\t\t\t]\n\t\t},      \n\t\t\"Largest city\": {\n\t\t\t\"rich_text\": [\n\t\t\t\t{\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"content\": \"{{$randomCity}}\"\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t]\n\t\t   \n        }\n\t},\n\t\"children\": [\n\t\t{\n\t\t\t\"object\": \"block\",\n\t\t\t\"type\": \"heading_2\",\n\t\t\t\"heading_2\": {\n\t\t\t\t\"text\": [{ \"type\": \"text\", \"text\": { \"content\": \"Abstract\" } }]\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"object\": \"block\",\n\t\t\t\"type\": \"paragraph\",\n\t\t\t\"paragraph\": {\n\t\t\t\t\"text\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"type\": \"text\",\n\t\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\t\"content\": \"{{$randomLoremParagraph}}\",\t\t\t\t\t\t\n                            \t\"link\": { \"url\": \"http://lorempixel.com/640/480/cats\" }\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t]\n}"
+				},
+				"url": {
+					"raw": "{{mainURL}}/pages",
+					"host": [
+						"{{mainURL}}"
+					],
+					"path": [
+						"pages"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
